@@ -19,8 +19,8 @@ The goals / steps of this project are the following:
 [Model]: ./images/Model.png "Model"
 [OriginalImage]: ./images/original.jpg "Initial image"
 [FlippedImage]: ./images/flipped.jpg "Flipped image"
-[DriveCenter]: ./images/drive_center.png "Center"
-[Optimal]: ./images/optimal.png "Optimal"
+[DriveCenter]: ./images/drive_center.jpg "Center"
+[Optimal]: ./images/Optimal.png "Optimal"
 
 ## Rubric Points
 
