@@ -47,7 +47,7 @@ python drive.py model.h5
 
 The model.py file contains the code for training and saving the convolution neural network. The file shows the pipeline I used for training and validating the model, and it should be self-explanatory.
 
-###Model Architecture and Training Strategy
+### Model Architecture and Training Strategy
 
 #### 1. An appropriate model architecture has been employed
 
@@ -92,7 +92,11 @@ THen I added an image preprocessing step to crop image and remove sky and trees 
 
 To combat the overfitting, I added dropout step to model with 50% keep probability, because this value worked in my previous project
 
-**At the end of the process, the vehicle is able to drive autonomously half of the track and then has left the road.**
+After that car was able to drive around 30% of the thrack
+
+Last improvement that gave a huge impact was to record a few situations when car is going to leave the track, but then turns back to the middle of the road.
+
+At the end of the process, the vehicle is able to drive autonomously around the track without leaving the road
 
 ####2. Final Model Architecture
 

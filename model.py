@@ -12,6 +12,9 @@ from sklearn.model_selection import train_test_split
 
 
 def get_data_lines():
+	"""
+	Reads csv with saved data from manual driving
+	"""
 	lines = []
 	with open('data/driving_log.csv') as csvfile:
 		reader = csv.reader(csvfile)
@@ -22,44 +25,60 @@ def get_data_lines():
 
 
 def process_row(data_row):
+    """
+	Processes each row from manual driving.
+	Uses all 3 images from left, center and right cameras. 
+	Correction for steering value (0.25) has been empirically found.
+	To process twice more data and to make it differeent each image is flipped, 
+	to simulate driving manually clockwise
+	"""
 	images, steering_angles = [], []
 
 	path = "./data/IMG/"
 	correction = 0.25
 
 	steering_center = float(data_row[3])
-	#steering_left = steering_center + correction
-	#steering_right = steering_center - correction
+	steering_left = steering_center + correction
+	steering_right = steering_center - correction
 
 	steering_center_flipped = steering_center * -1.
-	#steering_left_flipped = steering_left * -1.
-	#steering_right_flipped = steering_right * -1.
+	steering_left_flipped = steering_left * -1.
+	steering_right_flipped = steering_right * -1.
 
 	img_center = preprocess_image(cv2.imread(path + data_row[0].split('\\')[-1]))
-	#img_left = preprocess_image(cv2.imread(path + data_row[1].split('\\')[-1]))
-	#img_right = preprocess_image(cv2.imread(path + data_row[2].split('\\')[-1]))
+	img_left = preprocess_image(cv2.imread(path + data_row[1].split('\\')[-1]))
+	img_right = preprocess_image(cv2.imread(path + data_row[2].split('\\')[-1]))
 
 	img_center_flipped = flip_image(img_center)
-	#img_left_flipped = flip_image(img_left)
-	#img_right_flipped = flip_image(img_right)  
+	img_left_flipped = flip_image(img_left)
+	img_right_flipped = flip_image(img_right)  
 
-	#images.extend([img_center, img_left, img_right])
-	images.extend([img_center])
-	#steering_angles.extend([steering_center, steering_left, steering_right])
-	steering_angles.extend([steering_center])
+	images.extend([img_center, img_left, img_right, img_center_flipped, img_left_flipped, img_right_flipped])
+	# images.extend([img_center])
+	steering_angles.extend([steering_center, steering_left, steering_right, steering_center_flipped, steering_left_flipped, steering_right_flipped])
+	# steering_angles.extend([steering_center])
 
 	return images, steering_angles
 
 
 def preprocess_image(image):
+	"""
+	Crops image to remove sky and hood
+	"""
 	return image[50:140,:,:]
 
 
 def flip_image(image):
+	"""
+	Flips image to simulate driving clockwise
+	"""
 	return cv2.flip(image, 1)
 
 
 def generator(data_rows, batch_size=32):
+	"""
+	generator to process data in chunks
+	"""
 	num_rows = len(data_rows)
 	while True:
 		np.random.shuffle(data_rows)
@@ -81,6 +100,9 @@ def generator(data_rows, batch_size=32):
 
 
 def build_model(input_width, input_height):
+	"""
+	Builds model. Now it's update NVIDIA model
+	"""	
 	model = Sequential()
 	model.add(Lambda(lambda x: x / 255. - .5, input_shape=(input_height, input_width, 3)))
 	model.add(Conv2D(24, (5 ,5), activation="relu", strides=(2, 2)))
@@ -99,6 +121,9 @@ def build_model(input_width, input_height):
 
 
 def train_and_save_model(model, train_generator, train_data_length, validation_generator, validation_data_length):
+	"""
+	Compiles, trains model and saves to model.h5 file
+	"""		
 	model.compile(loss='mse', optimizer='adam')
 	model.fit_generator(train_generator, samples_per_epoch=train_data_length, validation_data=validation_generator, nb_val_samples=validation_data_length, nb_epoch=3)
 
@@ -106,18 +131,22 @@ def train_and_save_model(model, train_generator, train_data_length, validation_g
 
 
 def main():
+	"""
+	Main method. Orchestrates whole process
+	"""			
 	target_image_height = 90
 	target_image_width = 320
+	batch_size = 128
 
 	data_lines = get_data_lines()
 
 	train_data, validation_data = train_test_split(data_lines, test_size=0.2)
 
-	train_generator = generator(train_data, batch_size=128)
-	validation_generator = generator(validation_data, batch_size=128)
+	train_generator = generator(train_data, batch_size=batch_size)
+	validation_generator = generator(validation_data, batch_size=batch_size)
 
 	model = build_model(target_image_width, target_image_height)
-	train_and_save_model(model, train_generator, len(train_data), validation_generator, len(validation_data))
+	train_and_save_model(model, train_generator, batch_size, validation_generator, batch_size)
 
 
 if __name__ == '__main__':

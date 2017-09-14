@@ -63,6 +63,8 @@ def telemetry(sid, data):
         image_array = np.asarray(image)
 
         image_array = image_array[50:140,:,:]
+
+        image_array = image_array[:,:,::-1]
         
         steering_angle = float(model.predict(image_array[None, :, :, :], batch_size=1))
 
